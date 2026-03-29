@@ -90,6 +90,44 @@ hr.dv{border:none;border-top:1px solid var(--paper3);margin:16px 0;}
 .pi-text{font-size:13px;line-height:1.55;color:var(--ink);margin-bottom:8px;}
 .pi-meta{display:flex;align-items:center;justify-content:space-between;}
 .pi-alarm{font-size:11px;color:var(--ink3);font-family:'DM Mono',monospace;}
+/* ── 스와이프 카드 ── */
+.swipe-wrap{position:relative;margin-bottom:7px;border-radius:var(--r);overflow:hidden;background:var(--surface);}
+.swipe-bg-right{position:absolute;top:0;bottom:0;left:0;width:80px;background:var(--say);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;}
+.swipe-bg-left {position:absolute;top:0;bottom:0;right:0;width:80px;background:#c0392b;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;}
+.swipe-bg-icon{font-size:18px;color:#fff;}
+.swipe-bg-txt{font-size:10px;font-weight:700;color:#fff;font-family:'DM Mono',monospace;}
+.swipe-card{
+  position:relative;z-index:1;
+  background:var(--surface);border:1px solid var(--paper3);
+  border-radius:var(--r);padding:14px;
+  transform:translateX(0);
+  transition:transform .28s cubic-bezier(.22,1,.36,1);
+  will-change:transform;user-select:none;
+}
+.swipe-card.swiped-left {transform:translateX(-80px);}
+.swipe-card.swiped-right{transform:translateX(80px);}
+/* ── 상세 페이지 ── */
+.detail-type{display:inline-flex;align-items:center;gap:6px;padding:6px 13px;border-radius:20px;font-size:13px;font-weight:600;margin-bottom:18px;}
+.detail-text{font-family:'Instrument Serif',serif;font-size:24px;line-height:1.35;color:var(--ink);margin-bottom:22px;}
+.detail-row{display:flex;align-items:center;padding:11px 0;border-bottom:1px solid var(--paper3);font-size:13px;color:var(--ink);}
+.detail-row:last-of-type{border-bottom:none;}
+.detail-row-lbl{font-size:10px;color:var(--ink3);font-family:'DM Mono',monospace;width:52px;flex-shrink:0;letter-spacing:.06em;text-transform:uppercase;}
+.detail-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:24px;}
+.detail-btn{padding:14px;border-radius:var(--r);border:none;font-size:14px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all .15s;}
+.detail-btn:active{transform:scale(.97);}
+.detail-btn.edit{background:var(--ink);color:var(--paper);}
+.detail-btn.del {background:#fdf0ee;color:#8a3030;border:1px solid #f0c4c4;}
+/* ── 확인 모달 ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:300;display:flex;align-items:flex-end;justify-content:center;animation:mfade .18s ease;}
+@keyframes mfade{from{opacity:0}to{opacity:1}}
+.modal-sheet{width:100%;max-width:480px;background:var(--surface);border-radius:24px 24px 0 0;padding:22px 20px calc(var(--sab) + 20px);}
+.modal-title{font-family:'Instrument Serif',serif;font-size:20px;color:var(--ink);margin-bottom:6px;}
+.modal-body{font-size:13px;color:var(--ink2);line-height:1.55;margin-bottom:20px;}
+.modal-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.modal-btn{padding:14px;border-radius:var(--r);border:none;font-size:14px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all .15s;}
+.modal-btn:active{transform:scale(.97);}
+.modal-btn.cancel {background:var(--paper2);color:var(--ink2);}
+.modal-btn.confirm{background:#c0392b;color:#fff;}
 .push-banner{background:var(--do-bg);border:1px solid var(--do-bd);border-radius:var(--r);padding:13px 15px;display:flex;align-items:center;gap:12px;margin-bottom:10px;cursor:pointer;transition:all .15s;}
 .push-banner:active{transform:scale(.98);}
 .push-banner-text strong{display:block;font-size:13px;font-weight:600;color:var(--do);margin-bottom:2px;}
@@ -325,6 +363,25 @@ hr.dv{border:none;border-top:1px solid var(--paper3);margin:16px 0;}
     </div>
   </div>
 
+  <!-- DETAIL -->
+  <div class="screen" id="s-detail">
+    <div class="nav">
+      <div class="nav-back" onclick="goTo('s-home')">‹</div>
+      <div><div class="wm">amatda</div><div class="wm-sub">상세 보기</div></div>
+    </div>
+    <div class="sbody" style="padding-top:16px;">
+      <div id="detail-type" class="detail-type"></div>
+      <div id="detail-text" class="detail-text"></div>
+      <div class="detail-row"><span class="detail-row-lbl">알림</span><span id="detail-alarm"></span></div>
+      <div class="detail-row"><span class="detail-row-lbl">기록일</span><span id="detail-date"></span></div>
+      <div class="detail-row"><span class="detail-row-lbl">상태</span><span id="detail-status"></span></div>
+      <div class="detail-actions">
+        <button class="detail-btn edit" onclick="openEdit()">수정하기</button>
+        <button class="detail-btn del"  onclick="openDeleteModal()">삭제하기</button>
+      </div>
+    </div>
+  </div>
+
   <!-- NOTIFY -->
   <div class="screen" id="s-notify">
     <div class="nav"><div class="nav-back" onclick="goTo('s-home')">‹</div><div><div class="wm">amatda</div><div class="wm-sub">다시 마주치기</div></div></div>
@@ -389,9 +446,11 @@ const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFz
 const VAPID_PUBLIC  = 'BI06ln5uVR3ttJFj2btuSTlt3EsFQad_8i9k3V-1TLJwHD65d8_OhiNUbgBHpbKcR6y5DJ3OF6e9sjqOarBZIEs';
 
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON);
-let selTypeV=null,selAlarmV=null,calY2,calM2,fgData=[];
+let selTypeV=null,selAlarmV=null,calY2,calM2,fgData=[],editingId=null,deleteTargetId=null,currentNeed=null;
 const TODAY=new Date();
 const typeLabel={say:'💬 말해야 함',do:'🔲 해야 함',think:'🌀 생각 중',none:'—'};
+const typeColor={say:'var(--say)',do:'var(--do)',think:'var(--think)',none:'var(--ink3)'};
+const typeBg={say:'var(--say-bg)',do:'var(--do-bg)',think:'var(--think-bg)',none:'var(--paper2)'};
 const slotDisplay={morning:'오전 6:00',lunch:'오후 12:30',evening:'오후 7:00'};
 const typeRec={say:{slot:'lunch',txt:'💬 → 점심 추천'},do:{slot:'morning',txt:'🔲 → 아침 추천'},think:{slot:'evening',txt:'🌀 → 저녁 추천'}};
 const typeRules={say:/말해야|얘기해야|물어봐야|전달해야|보고해야|연락해야|톡|메일|전화|알려야|확인해야|요청/,do:/해야|사야|가야|만들어야|정리해야|예약|신청|등록|준비|시작|작성|고쳐야|바꿔야|처리|운동|병원/,think:/할지|말지|어떻게|고민|생각|결정|고려|검토|모르겠|어떨|할까|갈까|살까|바꿀까|옮길까/};
@@ -399,16 +458,109 @@ const typeRules={say:/말해야|얘기해야|물어봐야|전달해야|보고해
 function updateClock(){const n=new Date(),h=n.getHours(),m=String(n.getMinutes()).padStart(2,'0'),ampm=h<12?'오전':'오후',hh=h%12||12,days=['일','월','화','수','목','금','토'];document.getElementById('greetTime').textContent=`${ampm} ${hh}:${m} · ${days[n.getDay()]}요일`;}
 updateClock();setInterval(updateClock,10000);
 
-function goTo(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');if(id==='s-home')loadHome();if(id==='s-forgotten')loadForgotten();if(id==='s-notify')loadNotify();if(id==='s-report'){renderCal();loadReport();}}
+function goTo(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if(id==='s-home')loadHome();
+  if(id==='s-forgotten')loadForgotten();
+  if(id==='s-notify')loadNotify();
+  if(id==='s-report'){renderCal();loadReport();}
+  if(id==='s-input'&&!editingId)resetInputForm();
+}
 
 async function loadHome(){
   const list=document.getElementById('home-list');
   const{data}=await sb.from('needs').select('*').eq('status','pending').order('created_at',{ascending:false}).limit(10);
   if(!data?.length){list.innerHTML='<div style="padding:24px 0;text-align:center;color:var(--ink3);font-size:13px;font-family:\'Instrument Serif\',serif;font-style:italic;">아직 던져둔 게 없어요.</div>';return;}
-  list.innerHTML=data.map(n=>`<div class="pend-item ${n.type||'none'}"><div class="pi-text">${n.text}</div><div class="pi-meta"><span class="atp ${n.type||'none'}">${typeLabel[n.type]||'—'}</span><span class="pi-alarm">${slotDisplay[n.alarm_slot]||'—'}</span></div></div>`).join('');
+  list.innerHTML=data.map(n=>`
+    <div class="swipe-wrap" id="sw-${n.id}">
+      <div class="swipe-bg-right" onclick="triggerEdit('${n.id}')">
+        <div class="swipe-bg-icon">✏️</div><div class="swipe-bg-txt">수정</div>
+      </div>
+      <div class="swipe-bg-left" onclick="triggerDelete('${n.id}')">
+        <div class="swipe-bg-icon">🗑</div><div class="swipe-bg-txt">삭제</div>
+      </div>
+      <div class="swipe-card" id="sc-${n.id}" data-id="${n.id}"
+        ontouchstart="swipeStart(event,this)" ontouchmove="swipeMove(event,this)" ontouchend="swipeEnd(event,this)"
+        onclick="openDetail('${n.id}')">
+        <div class="pi-text">${n.text}</div>
+        <div class="pi-meta">
+          <span class="atp ${n.type||'none'}">${typeLabel[n.type]||'—'}</span>
+          <span class="pi-alarm">${slotDisplay[n.alarm_slot]||'—'}</span>
+        </div>
+      </div>
+    </div>`).join('');
   const{count}=await sb.from('needs').select('*',{count:'exact',head:true}).eq('status','pending').lt('created_at',new Date(Date.now()-30*24*60*60*1000).toISOString());
   const badge=document.getElementById('fgBadge'),banner=document.getElementById('fgBanner');
-  if(count>0){badge.textContent=count;badge.style.display='flex';banner.style.display='flex';}else{badge.style.display='none';banner.style.display='none';}
+  if(count>0){badge.textContent=count;badge.style.display='flex';banner.style.display='flex';}
+  else{badge.style.display='none';banner.style.display='none';}
+}
+
+let swStartX=0,swStartY=0,swMoved=false;
+function swipeStart(e,el){swStartX=e.touches[0].clientX;swStartY=e.touches[0].clientY;swMoved=false;}
+function swipeMove(e,el){
+  const dx=e.touches[0].clientX-swStartX,dy=e.touches[0].clientY-swStartY;
+  if(!swMoved&&Math.abs(dy)>Math.abs(dx)){return;}
+  swMoved=true;e.preventDefault();
+  el.style.transition='none';
+  el.style.transform=`translateX(${Math.max(-80,Math.min(80,dx))}px)`;
+}
+function swipeEnd(e,el){
+  if(!swMoved){swMoved=false;return;}
+  const dx=e.changedTouches[0].clientX-swStartX;
+  el.style.transition='';
+  if(dx<-40){closeAllSwipe(el);el.classList.add('swiped-left');el.style.transform='';}
+  else if(dx>40){closeAllSwipe(el);el.classList.add('swiped-right');el.style.transform='';}
+  else{el.classList.remove('swiped-left','swiped-right');el.style.transform='';}
+  swMoved=false;
+}
+function closeAllSwipe(except){document.querySelectorAll('.swipe-card').forEach(c=>{if(c!==except){c.classList.remove('swiped-left','swiped-right');c.style.transform='';}});}
+async function triggerDelete(id){deleteTargetId=id;openDeleteModal();}
+async function triggerEdit(id){const{data}=await sb.from('needs').select('*').eq('id',id).single();if(data)openEditScreen(data);}
+
+async function openDetail(id){
+  if(swMoved)return;
+  const card=document.getElementById(`sc-${id}`);
+  if(card&&(card.classList.contains('swiped-left')||card.classList.contains('swiped-right'))){closeAllSwipe(null);return;}
+  const{data}=await sb.from('needs').select('*').eq('id',id).single();
+  if(!data)return;
+  currentNeed=data;
+  const type=data.type||'none';
+  const el=document.getElementById('detail-type');
+  el.textContent=typeLabel[type];el.style.background=typeBg[type];el.style.color=typeColor[type];
+  document.getElementById('detail-text').textContent=data.text;
+  document.getElementById('detail-alarm').textContent=slotDisplay[data.alarm_slot]||'—';
+  document.getElementById('detail-date').textContent=new Date(data.created_at).toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric'});
+  document.getElementById('detail-status').textContent={pending:'대기 중',done:'완료',released:'내려놓음'}[data.status]||data.status;
+  goTo('s-detail');
+}
+function openEdit(){if(currentNeed)openEditScreen(currentNeed);}
+function openEditScreen(need){
+  editingId=need.id;
+  goTo('s-input');
+  setTimeout(()=>{
+    document.getElementById('mainInput').value=need.text;
+    document.getElementById('charN').textContent=need.text.length;
+    document.getElementById('saveBtn').textContent='수정하기';
+    if(need.type)selType(need.type,true);
+    if(need.alarm_slot){const slot=document.getElementById(`slot-${need.alarm_slot}`);if(slot)selAlarm(slot,need.alarm_slot);}
+    checkSave();
+  },100);
+}
+
+function openDeleteModal(){
+  if(document.getElementById('modal-overlay'))return;
+  const ov=document.createElement('div');ov.className='modal-overlay';ov.id='modal-overlay';
+  ov.innerHTML=`<div class="modal-sheet"><div class="modal-title">정말 삭제할까요?</div><div class="modal-body">삭제하면 되돌릴 수 없어요.</div><div class="modal-btns"><button class="modal-btn cancel" onclick="closeModal()">아니요</button><button class="modal-btn confirm" onclick="confirmDelete()">삭제할게요</button></div></div>`;
+  document.body.appendChild(ov);
+}
+function closeModal(){const ov=document.getElementById('modal-overlay');if(ov)ov.remove();}
+async function confirmDelete(){
+  const id=deleteTargetId||(currentNeed?.id);
+  if(!id){closeModal();return;}
+  await sb.from('needs').delete().eq('id',id);
+  closeModal();deleteTargetId=null;currentNeed=null;
+  showToast('삭제됐어요.');goTo('s-home');
 }
 
 function onInput(){const v=document.getElementById('mainInput').value;document.getElementById('charN').textContent=v.length;autoDetectType(v);checkSave();}
@@ -417,19 +569,31 @@ function selType(type,fromAI=false){['say','do','think'].forEach(t=>{document.ge
 function setRecommendedAlarm(type){['morning','lunch','evening'].forEach(s=>document.getElementById(`slot-${s}`).classList.remove('recommended'));const rec=typeRec[type];if(rec){document.getElementById(`slot-${rec.slot}`).classList.add('recommended');const rt=document.getElementById('alarmRecTxt');rt.textContent=rec.txt;rt.classList.add('show');}}
 function selAlarm(el,slot){document.querySelectorAll('.alarm-slot').forEach(a=>a.classList.remove('sel'));el.classList.add('sel');selAlarmV=slot;checkSave();}
 function checkSave(){const v=document.getElementById('mainInput').value.trim();document.getElementById('saveBtn').disabled=!(v&&selAlarmV);}
-async function saveNeed(){
-  const text=document.getElementById('mainInput').value.trim();
-  const btn=document.getElementById('saveBtn');btn.textContent='저장 중...';btn.disabled=true;
-  const{error}=await sb.from('needs').insert({text,type:selTypeV||null,alarm_slot:selAlarmV,status:'pending'});
-  if(error){showToast('저장 실패. 다시 시도해주세요.');btn.textContent='던져두기';btn.disabled=false;return;}
+function resetInputForm(){
   document.getElementById('mainInput').value='';document.getElementById('charN').textContent='0';
+  document.getElementById('saveBtn').textContent='던져두기';
   ['say','do','think'].forEach(t=>{document.getElementById(`tc-${t}`).className='type-card';document.getElementById(`ck-${t}`).textContent='';});
   document.querySelectorAll('.alarm-slot').forEach(a=>a.classList.remove('sel'));
   ['morning','lunch','evening'].forEach(s=>document.getElementById(`slot-${s}`).classList.remove('recommended'));
   document.getElementById('alarmRecTxt').classList.remove('show');
   document.getElementById('aiHint').textContent='—';document.getElementById('aiHint').classList.remove('lit');
-  selTypeV=null;selAlarmV=null;btn.textContent='던져두기';btn.disabled=true;
-  showToast('던져뒀어요. 알림이 데려다줄게요.');setTimeout(()=>goTo('s-home'),900);
+  selTypeV=null;selAlarmV=null;editingId=null;document.getElementById('saveBtn').disabled=true;
+}
+async function saveNeed(){
+  const text=document.getElementById('mainInput').value.trim();
+  const btn=document.getElementById('saveBtn');btn.disabled=true;
+  if(editingId){
+    btn.textContent='수정 중...';
+    const{error}=await sb.from('needs').update({text,type:selTypeV||null,alarm_slot:selAlarmV}).eq('id',editingId);
+    if(error){showToast('수정 실패.');btn.textContent='수정하기';btn.disabled=false;return;}
+    showToast('수정됐어요.');
+  }else{
+    btn.textContent='저장 중...';
+    const{error}=await sb.from('needs').insert({text,type:selTypeV||null,alarm_slot:selAlarmV,status:'pending'});
+    if(error){showToast('저장 실패.');btn.textContent='던져두기';btn.disabled=false;return;}
+    showToast('던져뒀어요. 알림이 데려다줄게요.');
+  }
+  resetInputForm();setTimeout(()=>goTo('s-home'),900);
 }
 
 async function loadNotify(){
@@ -448,14 +612,14 @@ async function loadForgotten(){
   fgData=data||[];document.getElementById('fgCountTxt').textContent=fgData.length;
   const thinkCount=fgData.filter(n=>n.type==='think').length;
   const ti=document.getElementById('thinkInsight');
-  if(thinkCount>=2){document.getElementById('thinkInsightTxt').innerHTML=`<strong>🌀 생각 중 ${thinkCount}개</strong>가 한 달 넘게 잠들어 있어요. 결정을 미루고 있는 건 아닌지, 한번 살펴봐요.`;ti.style.display='flex';}else{ti.style.display='none';}
+  if(thinkCount>=2){document.getElementById('thinkInsightTxt').innerHTML=`<strong>🌀 생각 중 ${thinkCount}개</strong>가 한 달 넘게 잠들어 있어요.`;ti.style.display='flex';}else{ti.style.display='none';}
   const list=document.getElementById('fg-list');
   if(!fgData.length){list.innerHTML='<div style="padding:24px 0;text-align:center;color:var(--ink3);font-size:13px;font-family:\'Instrument Serif\',serif;font-style:italic;">한 달 이상 된 것들이 없어요.</div>';return;}
   list.innerHTML=fgData.map(n=>`<div class="fg-card" id="fg-${n.id}"><div class="fg-meta"><span class="atp ${n.type||'none'}">${typeLabel[n.type]||'—'}</span><span class="fg-meta-time">${daysSince(n.created_at)}일 전</span></div><div class="fg-text">${n.text}</div><div class="fg-actions"><button class="fg-btn keep" onclick="fgKeep('${n.id}')">살릴게요</button><button class="fg-btn release" onclick="fgRelease('${n.id}')">보내줄게요</button></div></div>`).join('');
 }
 function daysSince(iso){return Math.floor((Date.now()-new Date(iso).getTime())/86400000);}
 async function fgKeep(id){await sb.from('needs').update({created_at:new Date().toISOString()}).eq('id',id);const c=document.getElementById(`fg-${id}`);c.querySelectorAll('button').forEach(b=>{b.disabled=true;b.style.opacity='.35';});c.classList.add('kept');showToast('다시 알림 큐에 넣었어요.');}
-async function fgRelease(id){await sb.from('needs').update({status:'released'}).eq('id',id);document.getElementById(`fg-${id}`).classList.add('released');showToast('보내줐어요. 마음 가벼워요.');}
+async function fgRelease(id){await sb.from('needs').update({status:'released'}).eq('id',id);document.getElementById(`fg-${id}`).classList.add('released');showToast('보내줬어요. 마음 가벼워요.');}
 async function releaseAll(){const ids=fgData.map(n=>n.id);if(!ids.length)return;await sb.from('needs').update({status:'released'}).in('id',ids);document.querySelectorAll('.fg-card:not(.kept)').forEach(c=>c.classList.add('released'));showToast('다 보내줬어요. 홀가분해요.');setTimeout(()=>goTo('s-home'),1300);}
 
 function initCal(){calY2=TODAY.getFullYear();calM2=TODAY.getMonth();}
@@ -471,21 +635,26 @@ async function renderCal(){
   for(let i=0;i<first;i++){const e=document.createElement('div');e.className='cal-cell empty';grid.appendChild(e);}
   for(let day=1;day<=dim;day++){const cnt=dayCounts[day]||0;const heat=cnt===0?'h0':cnt<=1?'h1':cnt<=2?'h2':cnt<=4?'h3':'h5';const isT=calY2===TODAY.getFullYear()&&calM2===TODAY.getMonth()&&day===TODAY.getDate();const e=document.createElement('div');e.className=`cal-cell ${heat} ${isT?'today':''}`;e.innerHTML=`<span class="cal-n">${day}</span>${cnt>0?`<span class="cal-c">${cnt}</span>`:''}`;grid.appendChild(e);}
 }
-function changeMonth(d){if(calY2===undefined)initCal();calM2+=d;if(calM2>11){calM2=0;calY2++;}if(calM2<0){calM2=11;calY2--;}renderCal();}
+function changeMonth(d){if(calY2===undefined)initCal();calM2+=d;if(calM2>11){calM2=0;calY2++;}if(calM2<0){calM2=11;calY2--;}renderCal();loadReport();}
 async function loadReport(){
-  const{data}=await sb.from('needs').select('*');if(!data)return;
-  const done=data.filter(n=>n.status==='done').length,released=data.filter(n=>n.status==='released').length,pending=data.filter(n=>n.status==='pending').length;
-  document.getElementById('ach-done').textContent=done;document.getElementById('ach-released').textContent=released;document.getElementById('ach-pending').textContent=pending;
+  if(calY2===undefined)initCal();
+  const from=new Date(calY2,calM2,1).toISOString(),to=new Date(calY2,calM2+1,0,23,59,59).toISOString();
+  const{data}=await sb.from('needs').select('*').gte('created_at',from).lte('created_at',to);
+  if(!data)return;
+  document.getElementById('ach-done').textContent=data.filter(n=>n.status==='done').length;
+  document.getElementById('ach-released').textContent=data.filter(n=>n.status==='released').length;
+  document.getElementById('ach-pending').textContent=data.filter(n=>n.status==='pending').length;
   const counts={say:0,do:0,think:0};data.forEach(n=>{if(counts[n.type]!==undefined)counts[n.type]++;});
   const total=Object.values(counts).reduce((a,b)=>a+b,0)||1;
   document.getElementById('typeBreakdown').innerHTML=[{type:'do',icon:'🔲',label:'해야 함'},{type:'think',icon:'🌀',label:'생각 중'},{type:'say',icon:'💬',label:'말해야 함'}].map(({type,icon,label})=>{const pct=Math.round(counts[type]/total*100);return `<div class="tb-type-row"><div class="tbt-icon">${icon}</div><div class="tbt-body"><div class="tbt-name">${label}</div><div class="tbt-bar-wrap"><div class="tbt-bar" style="width:${pct}%;background:var(--${type});"></div></div></div><div class="tbt-pct c-${type}">${pct}%</div></div>`;}).join('');
-  const thinkPct=Math.round(counts.think/total*100),sayPct=Math.round(counts.say/total*100);
-  let insights='';
-  if(thinkPct>=30)insights+=`<div class="insight"><div class="i-tag">🌀 생각 중이 많아요</div><div class="i-text amber">기록의 <strong>${thinkPct}%가 생각 중</strong>이에요. 결정 못 한 게 아니에요 — <em>아직 때가 아닌 것들이에요.</em></div></div>`;
-  if(sayPct>=20)insights+=`<div class="insight"><div class="i-tag">💬 말해야 함</div><div class="i-text blue"><strong>말해야 함</strong>이 ${sayPct}%예요. <em>대화로 풀리는 일들이 많네요.</em></div></div>`;
-  if(released>=3)insights+=`<div class="insight"><div class="i-tag">✦ 잘 내려놓고 있어요</div><div class="i-text"><em>${released}개를 자연스럽게 내려놨어요.</em> 잘하고 있어요.</div></div>`;
-  if(!insights)insights='<div class="insight"><div class="i-tag">○ 아직 쌓이는 중</div><div class="i-text">기록이 더 쌓이면 패턴이 보여요. 계속 던져두세요.</div></div>';
-  document.getElementById('insightSection').innerHTML=insights;
+  const thinkPct=Math.round(counts.think/total*100),sayPct=Math.round(counts.say/total*100),released=data.filter(n=>n.status==='released').length;
+  let ins='';
+  if(thinkPct>=30)ins+=`<div class="insight"><div class="i-tag">🌀 생각 중이 많아요</div><div class="i-text amber">기록의 <strong>${thinkPct}%가 생각 중</strong>이에요. <em>아직 때가 아닌 것들이에요.</em></div></div>`;
+  if(sayPct>=20)ins+=`<div class="insight"><div class="i-tag">💬 말해야 함</div><div class="i-text blue"><strong>말해야 함</strong>이 ${sayPct}%예요. <em>대화로 풀리는 일들이 많네요.</em></div></div>`;
+  if(released>=3)ins+=`<div class="insight"><div class="i-tag">✦ 잘 내려놓고 있어요</div><div class="i-text"><em>${released}개를 자연스럽게 내려놨어요.</em> 잘하고 있어요.</div></div>`;
+  if(!data.length)ins='<div class="insight"><div class="i-tag">○ 이번 달 기록 없음</div><div class="i-text">이번 달엔 아직 던져둔 게 없어요.</div></div>';
+  else if(!ins)ins='<div class="insight"><div class="i-tag">○ 아직 쌓이는 중</div><div class="i-text">기록이 더 쌓이면 패턴이 보여요.</div></div>';
+  document.getElementById('insightSection').innerHTML=ins;
 }
 
 async function initPush(){if(!('serviceWorker'in navigator)||!('PushManager'in window))return;const reg=await navigator.serviceWorker.register('/sw.js');const perm=Notification.permission;if(perm==='default')document.getElementById('pushBanner').style.display='flex';if(perm==='granted')await subscribePush(reg);}
@@ -494,6 +663,10 @@ async function subscribePush(reg){try{const sub=await reg.pushManager.subscribe(
 function urlB64ToUint8(b){const p='='.repeat((4-b.length%4)%4);const base64=(b+p).replace(/-/g,'+').replace(/_/g,'/');const raw=window.atob(base64);const arr=new Uint8Array(raw.length);for(let i=0;i<raw.length;i++)arr[i]=raw.charCodeAt(i);return arr;}
 
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
+
+document.addEventListener('touchstart',e=>{
+  if(!e.target.closest('.swipe-card')&&!e.target.closest('.swipe-bg-left')&&!e.target.closest('.swipe-bg-right')){closeAllSwipe(null);}
+},{passive:true});
 
 loadHome();
 initPush();
